@@ -1,0 +1,20 @@
+apply from: '../RLibrary/lib.gradle'
+
+// 如果出错, 请将以下代码, 同时复制到APP的gradle文件中
+android {
+    defaultConfig {
+        manifestPlaceholders = [
+                //bmob 后台申请的app id
+                BMOB_APP_ID : "36fb953422e58367c9f8727dd71a2d7e",
+                //渠道统计
+                BMOB_CHANNEL: "bmob_cls_manager"
+        ]
+    }
+
+    //记得调用 RBmob.init() 方法哦
+
+    useLibrary 'org.apache.http.legacy'
+}
+dependencies {
+    api fileTree(dir: 'libs', include: ['*.jar'])
+}
