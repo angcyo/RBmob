@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.util.Log;
 
 import cn.bmob.v3.Bmob;
+import cn.bmob.v3.BmobQuery;
 
 /**
  * Copyright (C) 2016,深圳市红鸟网络科技股份有限公司 All rights reserved.
@@ -53,5 +54,10 @@ public class RBmob {
         //.setFileExpiration(2500)
         //.build();
         //Bmob.initialize(config);
+    }
+
+    public static <T> BmobQuery<T> query() {
+        BmobQuery<T> query = new BmobQuery<>();
+        return query;
     }
 }
