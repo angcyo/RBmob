@@ -16,5 +16,6 @@ android {
     useLibrary 'org.apache.http.legacy'
 }
 dependencies {
-    api fileTree(dir: 'libs', include: ['*.jar'])
+    api fileTree(include: ['*.jar'], dir: 'libs')
+    api project(':RLibrary:uiview')
 }
