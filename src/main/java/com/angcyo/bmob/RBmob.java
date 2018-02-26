@@ -176,11 +176,11 @@ public class RBmob {
         });
     }
 
-    interface OnResult<T> {
+    public interface OnResult<T> {
         void onResult(List<T> resultList);
     }
 
-    interface OnSingleResult<T> {
+    public interface OnSingleResult<T> {
         void onResult(T result);
     }
 
