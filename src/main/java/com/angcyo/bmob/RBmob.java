@@ -12,10 +12,13 @@ import com.angcyo.uiview.utils.RUtils;
 import java.util.List;
 
 import cn.bmob.v3.Bmob;
+import cn.bmob.v3.BmobBatch;
 import cn.bmob.v3.BmobObject;
 import cn.bmob.v3.BmobQuery;
+import cn.bmob.v3.datatype.BatchResult;
 import cn.bmob.v3.exception.BmobException;
 import cn.bmob.v3.listener.FindListener;
+import cn.bmob.v3.listener.QueryListListener;
 import cn.bmob.v3.listener.UpdateListener;
 import rx.Subscription;
 
@@ -112,6 +115,35 @@ public class RBmob {
                             }
                         }
                     });
+                }
+            }
+        });
+    }
+
+    /**
+     * 批量更新数据, 此功能不检查数据是否存在, 请保证数据一定存在
+     */
+    public static Subscription update(final List<BmobObject> datas, final OnSingleResult<String> onResult) {
+        return new BmobBatch().updateBatch(datas).doBatch(new QueryListListener<BatchResult>() {
+            @Override
+            public void done(List<BatchResult> list, BmobException e) {
+                if (e == null) {
+                    StringBuilder ids = new StringBuilder();
+                    for (int i = 0; i < list.size(); i++) {
+                        BatchResult result = list.get(i);
+                        BmobException ex = result.getError();
+                        if (ex == null) {
+                            //log("第" + i + "个数据批量更新成功：" + result.getUpdatedAt());
+                            ids.append(",");
+                            ids.append(result.getObjectId());
+                        } else {
+                            //log("第" + i + "个数据批量更新失败：" + ex.getMessage() + "," + ex.getErrorCode());
+                        }
+                    }
+                    onResult.onResult(RUtils.safe(ids));
+                } else {
+                    Log.i("bmob", "失败：" + e.getMessage() + "," + e.getErrorCode());
+                    onResult.onResult("");
                 }
             }
         });
