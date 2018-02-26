@@ -4,7 +4,7 @@ Bmob后端数据sdk接入 2018-2-23
 >BmobObject类本身包含objectId、createdAt、updatedAt、ACL四个默认的属性，objectId是数据的唯一标示，相当于数据库中表的主键，createdAt是数据的创建时间，updatedAt是数据的最后修改时间，ACL是数据的操作权限。
 
  // 仅在客户端使用，不希望被gson序列化提交到后端云，记得用transient修饰
-    private transient Integer count;
+>private transient Integer count;
 
 ### 特殊对象
 为了提供更好的服务，BmobSDK中提供了BmobUser、BmobInstallation、BmobRole三个特殊的BmobObject对象来完成不同的功能，在这里我们统一称为特殊对象。

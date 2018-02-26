@@ -124,6 +124,7 @@ public class RBmob {
      */
     public static <T extends BmobObject> Subscription query(Class<T> cls, String where, final OnResult<T> onResult) {
         final BmobQuery<T> query = new BmobQuery<>();
+        query.setLimit(500);//最大返回500条, 请查看文档的分页查询
         P.foreach(new P.OnValue() {
             @Override
             public void onValue(String key, String value) {
