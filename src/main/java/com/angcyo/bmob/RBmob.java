@@ -89,7 +89,7 @@ public class RBmob {
             @Override
             public void onError(int code, String msg) {
                 //super.onError(code, msg);
-                onResult.onResult("");
+                onResult.onResult(null);
             }
         });
     }
@@ -101,7 +101,9 @@ public class RBmob {
         return query(cls, where, new OnResult<T>() {
             @Override
             public void onResult(List<T> resultList) {
-                if (RUtils.isListEmpty(resultList)) {
+                if (resultList == null) {
+                    onResult.onResult(null);
+                } else if (RUtils.isListEmpty(resultList)) {
                     save(data, onResult);
                 } else {
                     final String objectId = resultList.get(0).getObjectId();
@@ -111,7 +113,7 @@ public class RBmob {
                             if (e == null) {
                                 onResult.onResult(objectId);
                             } else {
-                                onResult.onResult("");
+                                onResult.onResult(null);
                             }
                         }
                     });
@@ -123,7 +125,7 @@ public class RBmob {
     /**
      * 批量更新数据, 此功能不检查数据是否存在, 请保证数据一定存在
      */
-    public static Subscription update(final List<BmobObject> datas, final OnSingleResult<String> onResult) {
+    public static Subscription update(final List datas, final OnSingleResult<String> onResult) {
         return new BmobBatch().updateBatch(datas).doBatch(new QueryListListener<BatchResult>() {
             @Override
             public void done(List<BatchResult> list, BmobException e) {
@@ -143,7 +145,7 @@ public class RBmob {
                     onResult.onResult(RUtils.safe(ids));
                 } else {
                     Log.i("bmob", "失败：" + e.getMessage() + "," + e.getErrorCode());
-                    onResult.onResult("");
+                    onResult.onResult(null);
                 }
             }
         });
