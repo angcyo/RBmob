@@ -5,9 +5,9 @@ android {
     defaultConfig {
         manifestPlaceholders = [
                 //bmob 后台申请的app id
-                BMOB_APP_ID : "36fb953422e58367c9f8727dd71a2d7e",
+                BMOB_APP_ID : "a5809b8e9d877c2e88fd655eac533bed",
                 //渠道统计
-                BMOB_CHANNEL: "bmob_cls_manager"
+                BMOB_CHANNEL: "bmob_student_manager"
         ]
     }
 
