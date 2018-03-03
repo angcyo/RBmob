@@ -101,9 +101,7 @@ public class RBmob {
         return query(cls, where, new OnResult<T>() {
             @Override
             public void onResult(List<T> resultList) {
-                if (resultList == null) {
-                    onResult.onResult(null);
-                } else if (RUtils.isListEmpty(resultList)) {
+                if (RUtils.isListEmpty(resultList)) {
                     save(data, onResult);
                 } else {
                     final String objectId = resultList.get(0).getObjectId();
