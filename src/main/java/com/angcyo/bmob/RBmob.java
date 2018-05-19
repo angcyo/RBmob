@@ -3,6 +3,7 @@ package com.angcyo.bmob;
 import android.app.Application;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.angcyo.uiview.net.P;
@@ -71,8 +72,7 @@ public class RBmob {
     }
 
     public static <T> BmobQuery<T> query() {
-        BmobQuery<T> query = new BmobQuery<>();
-        return query;
+        return new BmobQuery<>();
     }
 
     /**
@@ -123,7 +123,11 @@ public class RBmob {
     /**
      * 批量更新数据, 此功能不检查数据是否存在, 请保证数据一定存在
      */
-    public static Subscription update(final List datas, final OnSingleResult<String> onResult) {
+    public static Subscription update(@NonNull final List datas, final OnSingleResult<String> onResult) {
+        if (RUtils.isListEmpty(datas)) {
+            throw new NullPointerException("datas not null.");
+        }
+
         return new BmobBatch().updateBatch(datas).doBatch(new QueryListListener<BatchResult>() {
             @Override
             public void done(List<BatchResult> list, BmobException e) {
