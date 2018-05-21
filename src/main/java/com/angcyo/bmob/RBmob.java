@@ -4,13 +4,18 @@ import android.app.Application;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.angcyo.uiview.net.Func;
 import com.angcyo.uiview.net.P;
 import com.angcyo.uiview.net.RSubscriber;
+import com.angcyo.uiview.net.Rx;
 import com.angcyo.uiview.utils.RUtils;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import cn.bmob.v3.Bmob;
 import cn.bmob.v3.BmobBatch;
@@ -21,6 +26,7 @@ import cn.bmob.v3.exception.BmobException;
 import cn.bmob.v3.listener.FindListener;
 import cn.bmob.v3.listener.QueryListListener;
 import cn.bmob.v3.listener.UpdateListener;
+import rx.Observer;
 import rx.Subscription;
 
 /**
@@ -122,33 +128,72 @@ public class RBmob {
 
     /**
      * 批量更新数据, 此功能不检查数据是否存在, 请保证数据一定存在
+     * <p>
+     * 一次性不能超过50条数据
      */
     public static Subscription update(@NonNull final List datas, final OnSingleResult<String> onResult) {
         if (RUtils.isListEmpty(datas)) {
             throw new NullPointerException("datas not null.");
         }
 
-        return new BmobBatch().updateBatch(datas).doBatch(new QueryListListener<BatchResult>() {
+        int maxSize = 50;
+
+        final int step = (int) Math.ceil(datas.size() * 1f / maxSize);
+        final List<List<BmobObject>> lists = new ArrayList<>(step);
+        for (int i = 0; i < step; i++) {
+            List<BmobObject> subList = new ArrayList<>(maxSize);
+            for (int j = i * 50; j < (i + 1) * 50 && j < datas.size(); j++) {
+                subList.add((BmobObject) datas.get(j));
+            }
+            lists.add(subList);
+        }
+
+        return Rx.create(new Func<String>() {
             @Override
-            public void done(List<BatchResult> list, BmobException e) {
-                if (e == null) {
-                    StringBuilder ids = new StringBuilder();
-                    for (int i = 0; i < list.size(); i++) {
-                        BatchResult result = list.get(i);
-                        BmobException ex = result.getError();
-                        if (ex == null) {
-                            //log("第" + i + "个数据批量更新成功：" + result.getUpdatedAt());
-                            ids.append(",");
-                            ids.append(result.getObjectId());
-                        } else {
-                            //log("第" + i + "个数据批量更新失败：" + ex.getMessage() + "," + ex.getErrorCode());
+            public String call(Observer observer) {
+                final CountDownLatch countDownLatch = new CountDownLatch(step);
+                final StringBuilder resultBuilder = new StringBuilder();
+
+                for (List<BmobObject> updateList : lists) {
+                    new BmobBatch().updateBatch(updateList).doBatch(new QueryListListener<BatchResult>() {
+                        @Override
+                        public void done(List<BatchResult> list, BmobException e) {
+                            if (e == null) {
+                                Log.i("bmob", "更新成功：" + list.size() + " 个.");
+
+                                for (int i = 0; i < list.size(); i++) {
+                                    BatchResult result = list.get(i);
+                                    BmobException ex = result.getError();
+                                    if (ex == null) {
+                                        //log("第" + i + "个数据批量更新成功：" + result.getUpdatedAt());
+                                        resultBuilder.append(",");
+                                        resultBuilder.append(result.getObjectId());
+                                    } else {
+                                        //log("第" + i + "个数据批量更新失败：" + ex.getMessage() + "," + ex.getErrorCode());
+                                    }
+                                }
+
+                            } else {
+                                Log.i("bmob", "失败：" + e.getMessage() + "," + e.getErrorCode());
+                            }
+
+                            countDownLatch.countDown();
                         }
-                    }
-                    onResult.onResult(RUtils.safe(ids));
-                } else {
-                    Log.i("bmob", "失败：" + e.getMessage() + "," + e.getErrorCode());
-                    onResult.onResult(null);
+                    });
                 }
+
+                try {
+                    countDownLatch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return resultBuilder.toString();
+            }
+        }).subscribe(new RSubscriber<String>() {
+            @Override
+            public void onSucceed(String bean) {
+                super.onSucceed(bean);
+                onResult.onResult(bean);
             }
         });
     }
@@ -213,11 +258,11 @@ public class RBmob {
     }
 
     public interface OnResult<T> {
-        void onResult(List<T> resultList);
+        void onResult(@Nullable List<T> resultList);
     }
 
     public interface OnSingleResult<T> {
-        void onResult(T result);
+        void onResult(@Nullable T result);
     }
 
     public static class RFindListener<T> extends FindListener<T> {
